@@ -8,7 +8,7 @@ var http = require('http'),
   util = require('util');
 
 function byteRangeRequest(req, res) {
-  var path = 'final.mp4';
+  var path = 'tmp/final.mp4';
   var stat = fs.statSync(path);
   var total = stat.size;
   if (req.headers['range']) {

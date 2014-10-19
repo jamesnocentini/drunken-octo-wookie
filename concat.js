@@ -24,7 +24,7 @@ exports.concat = function(json, callback) {
 
           var command = ffmpeg();
           steps.forEach(function(step, index) {
-            command.addInput(index + '.mp4')
+            command.addInput('tmp/' + index + '.mp4')
           });
 
           command
@@ -35,7 +35,7 @@ exports.concat = function(json, callback) {
               console.log('Merging finished !');
               callback();
             })
-            .mergeToFile('final.mp4', 'tmp/');
+            .mergeToFile('tmp/final.mp4', 'tmp/');
         })
 
     });
@@ -55,7 +55,7 @@ function trimMovie(step) {
       console.log('done');
       deferred.resolve(step);
     })
-    .output( steps.indexOf(step) + '.mp4' )
+    .output( 'tmp/' + steps.indexOf(step) + '.mp4' )
     .outputOptions(['-to ' + (step.end_at - step.start_at)])
     .run();
   return deferred.promise
