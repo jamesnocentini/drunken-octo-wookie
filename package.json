@@ -1,0 +1,24 @@
+{
+  "name": "drunken-octo-wookie",
+  "version": "0.0.0",
+  "description": "drunken-octo-wookie ===================",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Jamiltz/drunken-octo-wookie.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jamiltz/drunken-octo-wookie/issues"
+  },
+  "homepage": "https://github.com/Jamiltz/drunken-octo-wookie",
+  "dependencies": {
+    "youtube-dl": "^1.5.15",
+    "fluent-ffmpeg": "^2.0.0-rc2",
+    "q": "^1.0.1"
+  }
+}
