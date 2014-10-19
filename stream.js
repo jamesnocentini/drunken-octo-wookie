@@ -1,63 +1,39 @@
-var youtubedl = require('youtube-dl')
-  , ffmpeg = require('fluent-ffmpeg')
-  , Q = require('q');
+/*
+ * Inspired by: http://stackoverflow.com/questions/4360060/video-streaming-with-html-5-via-node-js
+ */
 
-steps.forEach(function (step, index) {
-  youtubedl.getInfo(step.url, ['--format=18', '--prefer-insecure'], function(err, info) {
-    if (err) throw err;
+var http = require('http'),
+  fs = require('fs'),
+  util = require('util');
 
-    step.mp4_url = info.url
+function byteRangeRequest(req, res) {
+  var path = 'final.mp4';
+  var stat = fs.statSync(path);
+  var total = stat.size;
+  if (req.headers['range']) {
+    var range = req.headers.range;
+    var parts = range.replace(/bytes=/, "").split("-");
+    var partialstart = parts[0];
+    var partialend = parts[1];
 
-  })
-});
+    var start = parseInt(partialstart, 10);
+    var end = partialend ? parseInt(partialend, 10) : total-1;
+    var chunksize = (end-start)+1;
+    console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
-Q.all(steps.map(function (step) { return getYTUrl(step) }))
-  .then(function(results) {
-
-    Q.all(steps.map(function (step) { return trimMovie(step) }))
-      .then(function (results) {
-
-        var command = ffmpeg();
-        steps.forEach(function(step, index) {
-          command.addInput(index + '.mp4')
-        });
-
-        command
-          .on('error', function(err) {
-            console.log('An error occurred: ' + err.message);
-          })
-          .on('end', function() {
-            console.log('Merging finished !');
-          })
-          .mergeToFile('final.mp4', 'tmp/');
-      })
-
-  });
-
-
-// private
-
-function trimMovie(step) {
-  var deferred = Q.defer();
-  ffmpeg(step.mp4_url)
-    .inputOptions(['-ss ' + step.start_at])
-    .on('end', function() {
-      console.log('done');
-      deferred.resolve(step);
-    })
-    .output( steps.indexOf(step) + '.mp4' )
-    .outputOptions(['-to ' + (step.end_at - step.start_at)])
-    .run();
-  return deferred.promise
+    var file = fs.createReadStream(path, {start: start, end: end});
+    res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total, 'Accept-Ranges': 'bytes', 'Content-Length': chunksize, 'Content-Type': 'video/mp4' });
+    file.pipe(res);
+  } else {
+    console.log('ALL: ' + total);
+    res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
+    fs.createReadStream(path).pipe(res);
+  }
 }
 
-function getYTUrl(step) {
-  var deferred = Q.defer();
-  youtubedl.getInfo(step.url, ['--format=18', '--prefer-insecure'], function(err, info) {
-    if (err) throw err;
+exports.byteRangeRequest = byteRangeRequest;
 
-    step.mp4_url = info.url;
-    deferred.resolve(step);
-  });
-  return deferred.promise
-}
+//http.createServer(function (req, res) {
+//  byteRangeRequest(req, res)
+//}).listen(1337, '127.0.0.1');
+//console.log('Server running at http://127.0.0.1:1337/');

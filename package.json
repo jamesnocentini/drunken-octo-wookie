@@ -19,6 +19,8 @@
   "dependencies": {
     "youtube-dl": "^1.5.15",
     "fluent-ffmpeg": "^2.0.0-rc2",
-    "q": "^1.0.1"
+    "q": "^1.0.1",
+    "http-proxy": "^1.5.3",
+    "request": "^2.45.0"
   }
 }
