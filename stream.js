@@ -8,6 +8,14 @@ var http = require('http'),
 
 function byteRangeRequest(req, res, filename) {
   var path = './tmp/' + filename + '.mp4';
+
+  if (!fs.existsSync(path)) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.write(JSON.stringify({ 'status': 'not found' }));
+    res.end();
+    return
+  }
+
   var stat = fs.statSync(path);
   var total = stat.size;
   if (req.headers['range']) {

@@ -2,41 +2,67 @@
 
 var youtubedl = require('youtube-dl')
   , ffmpeg = require('fluent-ffmpeg')
-  , Q = require('q');
+  , Q = require('q')
+  , ytdl = require('ytdl-core');
 var steps;
 
+
+
 exports.concat = function(json, id, callback) {
+  callback();
+
   steps = json.steps;
-  steps.forEach(function (step, index) {
-    youtubedl.getInfo(step.url, ['--format=18', '--prefer-insecure'], function(err, info) {
-      if (err) throw err;
-
-      step.mp4_url = info.url
-
-    })
-  });
+//  steps.forEach(function (step, index) {
+//    youtubedl.getInfo(step.url, ['--format=18', '--prefer-insecure'], function(err, info) {
+//      if (err) throw err;
+//
+//      step.mp4_url = info.url
+//
+//    })
+//  });
 
   Q.all(steps.map(function (step) { return getYTUrl(step) }))
     .then(function(results) {
 
-      Q.all(steps.map(function (step) { return trimMovie(step) }))
-        .then(function (results) {
+      if (steps.length == 1) {
 
-          var command = ffmpeg();
-          steps.forEach(function(step, index) {
-            command.addInput('tmp/' + index + '.mp4')
+        ffmpeg('tmp/0.mp4')
+          .on('error', function(err) {
+            console.log('An error occurred: ' + err.message);
+          })
+          .on('end', function() {
+            console.log('Merging finished !')
+          })
+          .output( 'tmp/' + id + '.mp4' )
+          .run();
+
+      } else {
+
+        Q.all(steps.slice(0, 5).map(function (step) { return trimMovie(step) }))
+          .then(function() {
+            Q.all(steps.slice(5, 10).map(function (step) { return trimMovie(step) }))
+              .then(function (results) {
+
+                var command = ffmpeg();
+                steps.forEach(function(step, index) {
+                  command.addInput('tmp/' + index + '.mp4')
+                });
+
+                command
+                  .on('error', function(err) {
+                    console.log('An error occurred: ' + err.message);
+                  })
+                  .on('end', function() {
+                    console.log('Merging finished !');
+
+                  })
+                  .mergeToFile('tmp/' + id + '.mp4', 'tmp/');
+              })
           });
 
-          command
-            .on('error', function(err) {
-              console.log('An error occurred: ' + err.message);
-            })
-            .on('end', function() {
-              console.log('Merging finished !');
-              callback();
-            })
-            .mergeToFile('tmp/' + id + '.mp4', 'tmp/');
-        })
+      }
+
+
 
     });
 
@@ -63,11 +89,15 @@ function trimMovie(step) {
 
 function getYTUrl(step) {
   var deferred = Q.defer();
-  youtubedl.getInfo(step.url, ['--format=18', '--prefer-insecure'], function(err, info) {
+
+  ytdl.getInfo(step.url, { downloadURL: true }, function(err, info) {
     if (err) throw err;
 
-    step.mp4_url = info.url;
+    var video = info.formats.filter(function(obj) { return obj.itag == 18 } )[0];
+    step.mp4_url = video.url;
+
     deferred.resolve(step);
   });
+
   return deferred.promise
 }
