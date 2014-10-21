@@ -29,23 +29,22 @@ var server = http.createServer(function(req, res) {
       request('http://www.stepup.io/playlists/' + id + '.json', function (error, response, body) {
         if (!error && response.statusCode == 200) {
           console.log(body) // Print the google web page.
-          concat.concat(JSON.parse(body).steps, function() {
-//      res.writeHead(200, { 'Content-Type': 'application/json' });
-//      res.write(JSON.stringify({"ok": true}));
-//      res.end();
-            stream.byteRangeRequest(req, res)
+          concat.concat(JSON.parse(body), id, function() {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.write(JSON.stringify({"ok": true}));
+          res.end();
+//            stream.byteRangeRequest(req, res, id)
           });
         }
       })
 
-
     }
 
-
-
-
   } else if (req.url.indexOf('stream') > -1) {
-    stream.byteRangeRequest(req, res)
+
+    var id = req.url.split('/')[2];
+    stream.byteRangeRequest(req, res, id)
+
   } else {
     proxy.web(req, res, {
       target: 'http://www.stepup.io',

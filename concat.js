@@ -5,8 +5,8 @@ var youtubedl = require('youtube-dl')
   , Q = require('q');
 var steps;
 
-exports.concat = function(json, callback) {
-  steps = json;
+exports.concat = function(json, id, callback) {
+  steps = json.steps;
   steps.forEach(function (step, index) {
     youtubedl.getInfo(step.url, ['--format=18', '--prefer-insecure'], function(err, info) {
       if (err) throw err;
@@ -35,7 +35,7 @@ exports.concat = function(json, callback) {
               console.log('Merging finished !');
               callback();
             })
-            .mergeToFile('tmp/final.mp4', 'tmp/');
+            .mergeToFile('tmp/' + id + '.mp4', 'tmp/');
         })
 
     });

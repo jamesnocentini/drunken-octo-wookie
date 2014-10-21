@@ -2,13 +2,12 @@
  * Inspired by: http://stackoverflow.com/questions/4360060/video-streaming-with-html-5-via-node-js
  */
 
-
 var http = require('http'),
   fs = require('fs'),
   util = require('util');
 
-function byteRangeRequest(req, res) {
-  var path = 'tmp/final.mp4';
+function byteRangeRequest(req, res, filename) {
+  var path = 'tmp/' + filename + '.mp4';
   var stat = fs.statSync(path);
   var total = stat.size;
   if (req.headers['range']) {
