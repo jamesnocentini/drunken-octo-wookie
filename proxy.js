@@ -1,5 +1,6 @@
 var httpProxy = require('http-proxy')
   , http = require('http')
+  , fs = require('fs')
   , concat = require('./concat')
   , stream = require('./stream')
   , mongo = require('./mongo')
@@ -45,7 +46,14 @@ function routes(req, res, db) {
       });
 
     }
+  } else if (req.url.indexOf('image') > -1) {
+    var playlist_id = req.url.split('/')[2];
+    var file = req.url.split('/')[3];
+    var full_file_name = './tmp/'  + playlist_id + '_' + file
 
+    var img = fs.readFileSync(full_file_name);
+    res.writeHead(200, {'Content-Type': 'image/png' });
+    res.end(img, 'binary');
   } else if (req.url.indexOf('stream') > -1) {
 
     var id = req.url.split('/')[2];
