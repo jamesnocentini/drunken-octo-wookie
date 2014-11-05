@@ -26,7 +26,8 @@ exports.concat = function(json, id, callback) {
 
       if (steps.length == 1) {
 
-        ffmpeg('tmp/0.mp4')
+        ffmpeg(steps[0].mp4_url)
+          .inputOptions(['-ss ' + steps[0].start_at])
           .on('error', function(err) {
             console.log('An error occurred: ' + err.message);
           })
@@ -34,6 +35,7 @@ exports.concat = function(json, id, callback) {
             console.log('Merging finished !')
           })
           .output( 'tmp/' + id + '.mp4' )
+          .outputOptions(['-to ' + (steps[0].end_at - steps[0].start_at)])
           .run();
 
       } else {

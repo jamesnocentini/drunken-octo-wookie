@@ -52,17 +52,18 @@ function routes(req, res, db) {
     stream.byteRangeRequest(req, res, id)
 
   } else if (req.url.indexOf('register_token') > -1) {
-
-    db.collection('tokes').findOne({token: req.body.token}, function(err, res_mongo1) {
+    console.log(req.body);
+    var data = JSON.parse(req.body);
+    db.collection('tokes').findOne({token: data.token}, function(err, res_mongo1) {
       if(res_mongo1) {
-        db.collection('tokens').update({token: req.body.token}, req.body, function(err, updated_user) {
-          console.log('Updated token for '+req.body.user_id+' ['+req.body.token+']');
+        db.collection('tokens').update({token: data.token}, data, function(err, updated_user) {
+          console.log('Updated token for '+data.user_id+' ['+data.token+']');
           res.send('token existed, updated user_id');
         })
       } else {
-        db.collection('tokens').insert(req.body, function(err, res_mongo2) {
+        db.collection('tokens').insert(data, function(err, res_mongo2) {
           if (err) throw err;
-          console.log('Added token for '+req.body.user_id+' ['+req.body.token+']');
+          console.log('Added token for '+data.user_id+' ['+data.token+']');
           res.send('added token with user_id');
         });
       }
