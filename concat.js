@@ -40,15 +40,20 @@ exports.concat = function(json, id, callback) {
 
       } else {
 
-        Q.all(steps.slice(0, 5).map(function (step) { return trimMovie(step) }))
+        Q.all(steps.slice(0, 5).map(function (step) { return trimMovie(step, id) }))
           .then(function() {
-            Q.all(steps.slice(5, 10).map(function (step) { return trimMovie(step) }))
+            Q.all(steps.slice(5, 10).map(function (step) { return trimMovie(step, id) }))
               .then(function (results) {
 
                 var command = ffmpeg();
                 steps.forEach(function(step, index) {
-                  command.addInput('tmp/' + index + '.mp4')
+                  var tmp_video_file = 'tmp/' + index + '.mp4'
+                  var image_file = 'tmp/' + id + '_' + index + '.png'
+                  getThumbnail(tmp_video_file, image_file)
+                  command.addInput(tmp_video_file)
                 });
+
+
 
                 command
                   .on('error', function(err) {
@@ -74,6 +79,21 @@ exports.concat = function(json, id, callback) {
 
 
 // private
+function getThumbnail(video_file, image_file) {
+  var deferred = Q.defer();
+  console.log('extracting', video_file, image_file)
+  ffmpeg(video_file)
+    .on("end", function(){
+      console.log("extracting done!")
+      deferred.resolve();
+    })
+    .screenshots({
+      timestamps: ['0%'],
+      filename: image_file,
+      size: '320x240'
+    });
+  return deferred.promise
+}
 
 function trimMovie(step) {
   var deferred = Q.defer();
