@@ -32,6 +32,7 @@ exports.concat = function(json, id, callback) {
             console.log('An error occurred: ' + err.message);
           })
           .on('end', function() {
+            getThumbnail('tmp/' + id + '.mp4', 'tmp/' + id + '_1.png');
             console.log('Merging finished !')
           })
           .output( 'tmp/' + id + '.mp4' )
