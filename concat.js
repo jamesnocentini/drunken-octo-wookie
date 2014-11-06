@@ -48,7 +48,7 @@ exports.concat = function(json, id, callback) {
                 var command = ffmpeg();
                 steps.forEach(function(step, index) {
                   var tmp_video_file = 'tmp/' + index + '.mp4'
-                  var image_file = 'tmp/' + id + '_' + index + '.png'
+                  var image_file = 'tmp/' + id + '_' + (index + 1) + '.png'
                   getThumbnail(tmp_video_file, image_file)
                   command.addInput(tmp_video_file)
                 });
