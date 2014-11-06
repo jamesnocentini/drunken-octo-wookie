@@ -51,6 +51,12 @@ function routes(req, res, db) {
     var file = req.url.split('/')[3];
     var full_file_name = './tmp/'  + playlist_id + '_' + file
 
+    if (!fs.existsSync(full_file_name)) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify({ 'status': 'not found' }));
+      res.end();
+      return
+    }
     var img = fs.readFileSync(full_file_name);
     res.writeHead(200, {'Content-Type': 'image/png' });
     res.end(img, 'binary');
