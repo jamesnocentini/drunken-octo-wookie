@@ -91,7 +91,7 @@ function getThumbnail(video_file, image_file) {
     .screenshots({
       timestamps: ['0%'],
       filename: image_file,
-      size: '320x240'
+      size: '480x360'
     });
   return deferred.promise
 }
