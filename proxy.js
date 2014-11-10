@@ -63,7 +63,14 @@ function routes(req, res, db) {
   } else if (req.url.indexOf('stream') > -1) {
 
     var id = req.url.split('/')[2];
-    stream.byteRangeRequest(req, res, id)
+    var step_id = req.url.split('/')[3];
+    if (step_id) {
+      var file_name = id + "_" + step_id
+    }else{
+      var file_name = id
+    };
+    console.log("STRWAM", file_name)
+    stream.byteRangeRequest(req, res, file_name)
 
   } else if (req.url.indexOf('register_token') > -1) {
     console.log(req.body);

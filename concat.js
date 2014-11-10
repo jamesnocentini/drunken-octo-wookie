@@ -33,9 +33,8 @@ exports.concat = function(json, id, callback) {
           })
           .on('end', function() {
             getThumbnail('tmp/' + id + '.mp4', 'tmp/' + id + '_1.png');
-            console.log('Merging finished !')
           })
-          .output( 'tmp/' + id + '.mp4' )
+          .output( 'tmp/' + id + '_1.mp4' )
           .outputOptions(['-to ' + (steps[0].end_at - steps[0].start_at)])
           .run();
 
@@ -48,7 +47,7 @@ exports.concat = function(json, id, callback) {
 
                 var command = ffmpeg();
                 steps.forEach(function(step, index) {
-                  var tmp_video_file = 'tmp/' + index + '.mp4'
+                  var tmp_video_file = 'tmp/' + id + '_' + (index + 1) + '.mp4'
                   var image_file = 'tmp/' + id + '_' + (index + 1) + '.png'
                   getThumbnail(tmp_video_file, image_file)
                   command.addInput(tmp_video_file)
@@ -74,53 +73,58 @@ exports.concat = function(json, id, callback) {
 
     });
 
+
+    // private
+    function getThumbnail(video_file, image_file) {
+      var deferred = Q.defer();
+      console.log('extracting', video_file, image_file)
+      ffmpeg(video_file)
+        .on("end", function(){
+          console.log("extracting done!")
+          deferred.resolve();
+        })
+        .screenshots({
+          timestamps: ['0%'],
+          filename: image_file,
+          size: '480x360'
+        });
+      return deferred.promise
+    }
+
+    function trimMovie(step) {
+      var deferred = Q.defer();
+      ffmpeg(step.mp4_url)
+        .inputOptions(['-ss ' + step.start_at])
+        .on('end', function() {
+          console.log('done');
+          deferred.resolve(step);
+        })
+        .output( 'tmp/' + id + '_'  + (steps.indexOf(step) + 1) + '.mp4' )
+        .outputOptions(['-to ' + (step.end_at - step.start_at)])
+        .run();
+      return deferred.promise
+    }
+
+    function getYTUrl(step) {
+      var deferred = Q.defer();
+
+      ytdl.getInfo(step.url, { downloadURL: true }, function(err, info) {
+        if (err) throw err;
+
+        var video = info.formats.filter(function(obj) { return obj.itag == 18 } )[0];
+        step.mp4_url = video.url;
+
+        deferred.resolve(step);
+      });
+
+      return deferred.promise
+    }
+
+
+
+
 };
 
 
 
 
-// private
-function getThumbnail(video_file, image_file) {
-  var deferred = Q.defer();
-  console.log('extracting', video_file, image_file)
-  ffmpeg(video_file)
-    .on("end", function(){
-      console.log("extracting done!")
-      deferred.resolve();
-    })
-    .screenshots({
-      timestamps: ['0%'],
-      filename: image_file,
-      size: '480x360'
-    });
-  return deferred.promise
-}
-
-function trimMovie(step) {
-  var deferred = Q.defer();
-  ffmpeg(step.mp4_url)
-    .inputOptions(['-ss ' + step.start_at])
-    .on('end', function() {
-      console.log('done');
-      deferred.resolve(step);
-    })
-    .output( 'tmp/' + steps.indexOf(step) + '.mp4' )
-    .outputOptions(['-to ' + (step.end_at - step.start_at)])
-    .run();
-  return deferred.promise
-}
-
-function getYTUrl(step) {
-  var deferred = Q.defer();
-
-  ytdl.getInfo(step.url, { downloadURL: true }, function(err, info) {
-    if (err) throw err;
-
-    var video = info.formats.filter(function(obj) { return obj.itag == 18 } )[0];
-    step.mp4_url = video.url;
-
-    deferred.resolve(step);
-  });
-
-  return deferred.promise
-}
